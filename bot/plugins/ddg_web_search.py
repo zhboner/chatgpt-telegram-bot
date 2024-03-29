@@ -5,7 +5,7 @@ from typing import Dict
 from duckduckgo_search import DDGS
 
 from .plugin import Plugin
-
+from .web_browser import WebBrowserPlugin, ERROR_MESSAGE
 
 class DDGWebSearchPlugin(Plugin):
     """
@@ -57,10 +57,14 @@ class DDGWebSearchPlugin(Plugin):
             if results is None or len(results) == 0:
                 return {"Result": "No good DuckDuckGo Search Result was found"}
 
-            def to_metadata(result: Dict) -> Dict[str, str]:
-                return {
-                    "snippet": result["body"],
-                    "title": result["title"],
-                    "link": result["href"],
-                }
-            return {"result": [to_metadata(result) for result in results[:3]]}
+            browser = WebBrowserPlugin()
+            output = {"result": []}
+            for result in results[:3]:
+                content = await browser.execute(function_name, helper, url=result["href"])
+                if content['result'] != ERROR_MESSAGE:
+                    output['result'].extend(content['result'])
+
+            if len(output['result']) == 0:
+                return {"Result": "No good DuckDuckGo Search Result was found"}
+
+            return {"result": output}
