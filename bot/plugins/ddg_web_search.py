@@ -39,7 +39,7 @@ class DDGWebSearchPlugin(Plugin):
                                  'se-sv', 'ch-de', 'ch-fr', 'ch-it', 'tw-tzh', 'th-th', 'tr-tr', 'ua-uk', 'uk-en',
                                  'us-en', 'ue-es', 've-es', 'vn-vi', 'wt-wt'],
                         "description": "The region to use for the search. Infer this from the language used for the"
-                                       "query. Default to `wt-wt` if not specified",
+                                       "query. Default to `cn-zh` if not specified",
                     }
                 },
                 "required": ["query", "region"],
@@ -48,12 +48,11 @@ class DDGWebSearchPlugin(Plugin):
 
     async def execute(self, function_name, helper, **kwargs) -> Dict:
         with DDGS() as ddgs:
-            ddgs_gen = ddgs.text(
+            results = ddgs.text(
                 kwargs['query'],
-                region=kwargs.get('region', 'wt-wt'),
+                region=kwargs.get('region', 'cn-zh'),
                 safesearch=self.safesearch
             )
-            results = list(islice(ddgs_gen, 3))
 
             if results is None or len(results) == 0:
                 return {"Result": "No good DuckDuckGo Search Result was found"}
@@ -64,4 +63,4 @@ class DDGWebSearchPlugin(Plugin):
                     "title": result["title"],
                     "link": result["href"],
                 }
-            return {"result": [to_metadata(result) for result in results]}
+            return {"result": [to_metadata(result) for result in results[:3]]}
